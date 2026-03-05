@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои дела</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F0E8;
+    --surface: #FFFDF7;
+    --ink: #1C1A16;
+    --ink-soft: #6B6459;
+    --line: #E2DCCF;
+    --accent: #C4773B;
+    --accent-light: #F0E0CC;
+    --done: #A0A89A;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    max-width: 640px;
+    margin: 0 auto 40px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  .date {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 300;
+    margin-left: auto;
+  }
+
+  .board {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Add category */
+  .add-category {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .add-category input {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .add-category input:focus { border-color: var(--accent); }
+
+  .btn-add-cat {
+    padding: 10px 18px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn-add-cat:hover { background: #333; }
+  .btn-add-cat:active { transform: scale(0.97); }
+
+  /* Category card */
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px 14px 18px;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .card-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    flex: 1;
+  }
+
+  .card-count {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .card-chevron {
+    font-size: 11px;
+    color: var(--ink-soft);
+    transition: transform 0.2s;
+  }
+
+  .card.collapsed .card-chevron { transform: rotate(-90deg); }
+
+  .btn-del-cat {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+
+  .btn-del-cat:hover { opacity: 1; color: #c0392b; }
+
+  .card-body {
+    padding: 0 18px 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .card.collapsed .card-body { display: none; }
+
+  /* Tasks */
+  .task-list {
+    list-style: none;
+    padding: 10px 0 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    animation: slideIn 0.2s ease;
+  }
+
+  .task-item:last-child { border-bottom: none; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+
+  .task-check:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .task-check:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .task-text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    transition: color 0.2s;
+  }
+
+  .task-text.done {
+    color: var(--done);
+    text-decoration: line-through;
+    text-decoration-color: var(--done);
+  }
+
+  .btn-del-task {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+
+  .task-item:hover .btn-del-task { opacity: 0.5; }
+  .btn-del-task:hover { opacity: 1 !important; color: #c0392b; }
+
+  /* Add task row */
+  .add-task {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .add-task input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .add-task input:focus {
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .add-task input::placeholder { color: var(--ink-soft); }
+
+  .btn-add-task {
+    padding: 7px 14px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-light);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-add-task:hover { background: #e8cba8; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 24px 0 8px;
+    font-style: italic;
+  }
+
+  /* Colors for category dots */
+  .c0 { background: #C4773B; }
+  .c1 { background: #5B8A6F; }
+  .c2 { background: #7A6FA8; }
+  .c3 { background: #B05A5A; }
+  .c4 { background: #4A7FA8; }
+  .c5 { background: #A89A3B; }
+  .c6 { background: #8A5B7A; }
+  .c7 { background: #3B8A8A; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Мои дела</h1>
+  <span class="date" id="today-date"></span>
+</header>
+
+<div class="board">
+  <div class="add-category">
+    <input type="text" id="new-cat-input" placeholder="Новая категория, например «Здоровье»…">
+    <button class="btn-add-cat" onclick="addCategory()">+ Добавить</button>
+  </div>
+  <div id="categories"></div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let state = JSON.parse(localStorage.getItem('organizer') || 'null') || {
+    categories: [
+      { id: 1, title: 'Здоровье', collapsed: false, tasks: [
+        { id: 11, text: 'Записаться к стоматологу', done: false },
+        { id: 12, text: 'Сдать анализы', done: false }
+      ]},
+      { id: 2, title: 'Дом', collapsed: false, tasks: [
+        { id: 21, text: 'Вызвать мастера починить кран', done: false }
+      ]},
+    ],
+    nextId: 100
+  };
+
+  function save() {
+    localStorage.setItem('organizer', JSON.stringify(state));
+  }
+
+  // ── Date ──────────────────────────────────────────────────────────────────
+  const days = ['вс','пн','вт','ср','чт','пт','сб'];
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const d = new Date();
+  document.getElementById('today-date').textContent =
+    `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function render() {
+    const container = document.getElementById('categories');
+    container.innerHTML = '';
+
+    state.categories.forEach((cat, ci) => {
+      const doneCnt = cat.tasks.filter(t => t.done).length;
+      const total   = cat.tasks.length;
+      const colorClass = `c${ci % 8}`;
+
+      const card = document.createElement('div');
+      card.className = 'card' + (cat.collapsed ? ' collapsed' : '');
+      card.innerHTML = `
+        <div class="card-header" onclick="toggleCat(${cat.id})">
+          <div class="card-dot ${colorClass}"></div>
+          <span class="card-title">${escHtml(cat.title)}</span>
+          <span class="card-count">${doneCnt}/${total}</span>
+          <button class="btn-del-cat" onclick="event.stopPropagation(); deleteCategory(${cat.id})" title="Удалить">✕</button>
+          <span class="card-chevron">▾</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="list-${cat.id}">
+            ${total === 0 ? '<li class="empty">Пока задач нет</li>' : ''}
+            ${cat.tasks.map(t => `
+              <li class="task-item">
+                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''}
+                  onchange="toggleTask(${cat.id}, ${t.id})">
+                <span class="task-text ${t.done ? 'done' : ''}">${escHtml(t.text)}</span>
+                <button class="btn-del-task" onclick="deleteTask(${cat.id}, ${t.id})" title="Удалить">✕</button>
+              </li>
+            `).join('')}
+          </ul>
+          <div class="add-task">
+            <input type="text" placeholder="Добавить задачу…"
+              id="task-input-${cat.id}"
+              onkeydown="if(event.key==='Enter') addTask(${cat.id})">
+            <button class="btn-add-task" onclick="addTask(${cat.id})">+ Добавить</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  function addCategory() {
+    const input = document.getElementById('new-cat-input');
+    const title = input.value.trim();
+    if (!title) return;
+    state.categories.push({ id: state.nextId++, title, collapsed: false, tasks: [] });
+    input.value = '';
+    save(); render();
+  }
+
+  document.getElementById('new-cat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addCategory();
+  });
+
+  function deleteCategory(catId) {
+    if (!confirm('Удалить категорию со всеми задачами?')) return;
+    state.categories = state.categories.filter(c => c.id !== catId);
+    save(); render();
+  }
+
+  function toggleCat(catId) {
+    const cat = state.categories.find(c => c.id === catId);
+    if (cat) cat.collapsed = !cat.collapsed;
+    save(); render();
+  }
+
+  function addTask(catId) {
+    const input = document.getElementById(`task-input-${catId}`);
+    const text = input.value.trim();
+    if (!text) return;
+    const cat = state.categories.find(c => c.id === catId);
+    cat.tasks.push({ id: state.nextId++, text, done: false });
+    input.value = '';
+    save(); render();
+    // refocus
+    setTimeout(() => {
+      const el = document.getElementById(`task-input-${catId}`);
+      if (el) el.focus();
+    }, 50);
+  }
+
+  function toggleTask(catId, taskId) {
+    const cat = state.categories.find(c => c.id === catId);
+    const task = cat.tasks.find(t => t.id === taskId);
+    if (task) task.done = !task.done;
+    save(); render();
+  }
+
+  function deleteTask(catId, taskId) {
+    const cat = state.categories.find(c => c.id === catId);
+    cat.tasks = cat.tasks.filter(t => t.id !== taskId);
+    save(); render();
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  render();
+</script>
+</body>
+</html>
